@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: orchestrator
+  threads:
+    virtual:
+      enabled: true
+
+# AI models
+ollama:
+  base-url: http://192.168.0.146:11434
+  model-name: llama3.1:8b
+
+# OpenAPI Documentation
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+  api-docs:
+    path: /api-docs
+
+docker:
+  host: tcp://localhost:2375 # Standard TCP port for Docker daemon
