@@ -2,16 +2,19 @@ package ai.agentic.orchestrator.service.Impl;
 
 import ai.agentic.orchestrator.service.CodeGeneratorAgent;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class PythonCoderAgent implements CodeGeneratorAgent {
 
     private final ChatLanguageModel chatModel;
+
+    public PythonCoderAgent(@Qualifier("coderModel") ChatLanguageModel coderModel) {
+        this.chatModel = coderModel;
+    }
 
     @Override
     public String generatePythonCode(String taskDescription) {

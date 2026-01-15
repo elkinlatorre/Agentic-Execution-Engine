@@ -10,15 +10,26 @@ import java.time.Duration;
 
 @Configuration
 public class AiConfig {
-    @Bean
-    public ChatLanguageModel chatModel(
+    @Bean(name = "routerModel")
+    public ChatLanguageModel routerModel(
             @Value("${ollama.base-url}") String baseUrl,
-            @Value("${ollama.model-name}") String modelName) {
-
+            @Value("${ollama.model.router}") String modelName) {
         return OllamaChatModel.builder()
                 .baseUrl(baseUrl)
                 .modelName(modelName)
-                .timeout(Duration.ofSeconds(60)) // Tiempo de espera para inferencia lenta en CPU
+                .temperature(0.0) // Queremos consistencia para el router
+                .build();
+    }
+
+    @Bean(name = "coderModel")
+    public ChatLanguageModel coderModel(
+            @Value("${ollama.base-url}") String baseUrl,
+            @Value("${ollama.model.coder}") String modelName) {
+        return OllamaChatModel.builder()
+                .baseUrl(baseUrl)
+                .modelName(modelName)
+                .temperature(0.2) // Un poco de creatividad para resolver problemas
+                .timeout(Duration.ofSeconds(120))
                 .build();
     }
 }

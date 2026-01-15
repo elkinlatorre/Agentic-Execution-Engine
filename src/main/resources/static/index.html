@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Orchestrator - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+<nav class="bg-gray-800 p-4 border-b border-gray-700 shadow-xl">
+    <div class="container mx-auto flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-blue-400">
+            <i class="fas fa-robot mr-2"></i>Agentic Orchestrator
+        </h1>
+        <button onclick="loadHistory()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
+    </div>
+</nav>
+
+<main class="container mx-auto p-6">
+    <div class="grid grid-cols-1 gap-6">
+        <div class="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden">
+            <div class="p-4 border-b border-gray-700 bg-gray-800/50">
+                <h2 class="text-xl font-semibold">Execution History and Audit</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                    <tr class="bg-gray-700/50 text-gray-300 uppercase text-sm">
+                        <th class="p-4">ID</th>
+                        <th class="p-4">Prompt</th>
+                        <th class="p-4">Intent</th>
+                        <th class="p-4">Final Agent</th>
+                        <th class="p-4">Retries</th>
+                        <th class="p-4">Accions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="history-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="code-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-4">
+    <div class="bg-gray-800 rounded-xl max-w-4xl w-full p-6 border border-gray-700 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold" id="modal-title">Código Generado</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+        </div>
+        <pre id="modal-content" class="bg-black p-4 rounded-lg overflow-x-auto text-green-400 font-mono text-sm border border-gray-600"></pre>
+    </div>
+</div>
+
+<script>
+    async function loadHistory() {
+        try {
+            const response = await fetch('/api/v1/agent/history');
+            const data = await response.json();
+            const tbody = document.getElementById('history-body');
+            tbody.innerHTML = '';
+
+            data.sort((a, b) => b.id - a.id).forEach(log => {
+                const statusClass = log.finalAgent.includes('HEALED') ? 'text-yellow-400' : 'text-green-400';
+                const row = `
+                        <tr class="border-b border-gray-700 hover:bg-gray-700/30 transition">
+                            <td class="p-4 font-mono text-blue-400">${log.id}</td>
+                            <td class="p-4 text-sm truncate max-w-xs">${log.userPrompt}</td>
+                            <td class="p-4 font-semibold text-purple-400">${log.detectedIntent}</td>
+                            <td class="p-4 font-mono ${statusClass}">${log.finalAgent}</td>
+                            <td class="p-4 text-center">
+                                <span class="bg-gray-900 px-3 py-1 rounded-full border border-gray-600">${log.retryCount}</span>
+                            </td>
+                            <td class="p-4">
+                                <button
+    onclick="viewResult(decodeURIComponent('${encodeURIComponent(log.executionResult).replace(/'/g, '%27')}'))"
+    class="text-green-400 hover:underline">
+    Result
+  </button>
+                            </td>
+                        </tr>
+                    `;
+                tbody.innerHTML += row;
+            });
+        } catch (err) {
+            console.error("Error loading:", err);
+        }
+    }
+
+    function viewCode(code) {
+        document.getElementById('modal-title').innerText = "Python code generated";
+        document.getElementById('modal-content').innerText = code;
+        document.getElementById('code-modal').classList.remove('hidden');
+    }
+
+    function viewResult(result) {
+        document.getElementById('modal-title').innerText = "Sandbox output (Docker)";
+        document.getElementById('modal-content').innerText = result;
+        document.getElementById('code-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('code-modal').classList.add('hidden');
+    }
+
+    loadHistory();
+</script>
+</body>
+</html>

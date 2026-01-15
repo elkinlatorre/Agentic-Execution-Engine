@@ -25,7 +25,9 @@ spring:
 # AI models
 ollama:
   base-url: http://192.168.0.146:11434
-  model-name: llama3.1:8b
+  model:
+    router: llama3.2:3b
+    coder: llama3.1:8b
 
 # OpenAPI Documentation
 springdoc:

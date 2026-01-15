@@ -1,26 +1,35 @@
 package ai.agentic.orchestrator.service.Impl;
 
+import ai.agentic.orchestrator.dto.ExecutionLogDTO;
 import ai.agentic.orchestrator.dto.OrchestrationResult;
 import ai.agentic.orchestrator.model.ExecutionLog;
 import ai.agentic.orchestrator.repository.ExecutionLogRepository;
 import ai.agentic.orchestrator.service.CodeGeneratorAgent;
 import ai.agentic.orchestrator.service.OrchestratorService;
 import dev.langchain4j.model.chat.ChatLanguageModel;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class OrchestratorServiceImpl implements OrchestratorService {
 
     private final ChatLanguageModel chatModel;
     private final CodeGeneratorAgent codeGeneratorAgent;
     private final DockerSandboxService codeExecutionService;
-    private final ExecutionLogRepository logRepository;
+    private final ExecutionLogRepository executionLogRepository;
 
     private static final int MAX_RETRIES = 3;
+
+    public OrchestratorServiceImpl(@Qualifier("routerModel") ChatLanguageModel routerModel, CodeGeneratorAgent codeGeneratorAgent, DockerSandboxService codeExecutionService, ExecutionLogRepository executionLogRepository) {
+        this.chatModel = routerModel;
+        this.codeGeneratorAgent = codeGeneratorAgent;
+        this.codeExecutionService = codeExecutionService;
+        this.executionLogRepository = executionLogRepository;
+    }
 
     @Override
     public OrchestrationResult process(String userPrompt) {
@@ -46,7 +55,7 @@ public class OrchestratorServiceImpl implements OrchestratorService {
                     .retryCount(extractRetries(result.agentName()))
                     .build();
 
-            logRepository.save(executionLog);
+            executionLogRepository.save(executionLog);
             log.info("Execution log persisted to database with ID: {}", executionLog.getId());
         } catch (Exception e) {
             log.error("Failed to persist execution log: {}", e.getMessage());
@@ -107,5 +116,19 @@ public class OrchestratorServiceImpl implements OrchestratorService {
             """.formatted(prompt);
 
         return chatModel.generate(classificationPrompt).trim();
+    }
+
+    public List<ExecutionLogDTO> getAllHistory() {
+        return executionLogRepository.findAll().stream()
+                .map(log -> ExecutionLogDTO.builder()
+                        .id(log.getId())
+                        .userPrompt(log.getUserPrompt())
+                        .detectedIntent(log.getDetectedIntent())
+                        .generatedCode(log.getGeneratedCode())
+                        .executionResult(log.getExecutionResult())
+                        .finalAgent(log.getFinalAgent())
+                        .retryCount(log.getRetryCount())
+                        .build())
+                .toList();
     }
 }
