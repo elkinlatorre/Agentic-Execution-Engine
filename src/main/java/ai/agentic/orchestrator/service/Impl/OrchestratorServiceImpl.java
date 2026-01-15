@@ -9,6 +9,7 @@ import ai.agentic.orchestrator.service.OrchestratorService;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class OrchestratorServiceImpl implements OrchestratorService {
 
     @Override
     public OrchestrationResult process(String userPrompt) {
+        log.info("Processing request on thread: {}", Thread.currentThread());
         String intent = classifyIntent(userPrompt);
         OrchestrationResult result;
 
@@ -45,7 +47,8 @@ public class OrchestratorServiceImpl implements OrchestratorService {
         return result;
     }
 
-    private void saveExecutionLog(String prompt, String intent, OrchestrationResult result) {
+    @Async
+    protected void saveExecutionLog(String prompt, String intent, OrchestrationResult result) {
         try {
             ExecutionLog executionLog = ExecutionLog.builder()
                     .userPrompt(prompt)
