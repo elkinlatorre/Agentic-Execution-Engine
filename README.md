@@ -12,7 +12,7 @@
 
 ## 📖 Overview
 
-This project is a **Technical Proof of Concept (PoC)** for an Agentic AI Orchestrator. It is designed to safely run LLM-generated code in a production-grade architecture.
+Agentic AI Orchestrator. It is designed to safely run LLM-generated code in a production-grade architecture.
 
 **Key Capabilities:**
 *   **Intent Understanding**: Distinguishes between conversational requests and actionable computing tasks.
